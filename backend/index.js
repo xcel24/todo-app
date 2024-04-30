@@ -1,4 +1,5 @@
 const express = require('express');
+const dotenv = require('dotenv');
 const {
   createPostValidator,
   updatePostValidator,
@@ -8,6 +9,7 @@ const { connect } = require('./database/db');
 const { Todo } = require('./database/models');
 
 const app = express();
+dotenv.config();
 
 connect();
 
@@ -42,6 +44,7 @@ app.post('/todo', createPostValidator, async (req, res) => {
 app.put('/completed', updatePostValidator, async (req, res) => {
   //update logic
   const { id } = req.body;
+  console.log(id);
 
   const todo = await Todo.findById(id);
 
@@ -50,11 +53,23 @@ app.put('/completed', updatePostValidator, async (req, res) => {
     return;
   }
 
-  todo.completed = true;
+  try {
+    const result = await Todo.updateOne(
+      {
+        _id: id,
+      },
+      {
+        completed: true,
+      }
+    );
 
-  const result = await todo.save();
+    console.log(result);
 
-  res.status(201).json(result);
+    res.status(200).json({ message: 'Todo updated' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Error updating' });
+  }
 });
 
 app.listen(3000, () => console.log(`Server running on port 3000`));
